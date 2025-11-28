@@ -3,10 +3,10 @@ import sqlite3
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QHeaderView, QDialog
 )
-from PyQt6 import uic
+from UI.main_ui import Ui_MainWindow
+from UI.addEditCoffeeForm import Ui_AddEditCoffeeForm
 
-
-class AddEditCoffeeForm(QDialog):
+class AddEditCoffeeForm(QDialog, Ui_AddEditCoffeeForm):
     """
     Форма для добавления новой записи или редактирования существующей.
     Загружает интерфейс из addEditCoffeeForm.ui.
@@ -18,15 +18,7 @@ class AddEditCoffeeForm(QDialog):
         self.coffee_id = coffee_id
         self.is_edit_mode = coffee_id is not None
 
-        # Загрузка интерфейса формы
-        try:
-            uic.loadUi('addEditCoffeeForm.ui', self)
-        except FileNotFoundError:
-            self._show_error_box("Ошибка файла UI",
-                                 "Не найден файл 'addEditCoffeeForm.ui'."
-                                 " Убедитесь, что он находится в той же папке.")
-            sys.exit(1)
-
+        self.setupUi(self)
         self.setWindowTitle("Редактирование записи" if self.is_edit_mode else "Добавление новой записи")
 
         # Настройка кнопок
@@ -53,7 +45,7 @@ class AddEditCoffeeForm(QDialog):
     def _get_db_connection(self):
         """Пытается установить соединение с базой данных."""
         try:
-            conn = sqlite3.connect(self.DB_NAME)
+            conn = sqlite3.connect(f'data/{self.DB_NAME}')
             return conn
         except sqlite3.Error as e:
             self._show_error_box("Ошибка базы данных",
@@ -162,7 +154,7 @@ class AddEditCoffeeForm(QDialog):
             conn.close()
 
 
-class CoffeeApp(QMainWindow):
+class CoffeeApp(QMainWindow, Ui_MainWindow):
     """
     Основной класс приложения для отображения информации о кофе из SQLite.
     """
@@ -172,12 +164,7 @@ class CoffeeApp(QMainWindow):
         self.DB_NAME = 'coffee.sqlite'
 
         # Загрузка интерфейса из файла .ui
-        try:
-            uic.loadUi('main.ui', self)
-        except FileNotFoundError:
-            self._show_error_box("Ошибка файла UI",
-                                 "Не найден файл 'main.ui'. Убедитесь, что он находится в той же папке.")
-            sys.exit(1)
+        self.setupUi(self)
 
         self.setWindowTitle("Каталог Кофе")
 
@@ -202,7 +189,7 @@ class CoffeeApp(QMainWindow):
     def _get_db_connection(self):
         """Пытается установить соединение с базой данных."""
         try:
-            conn = sqlite3.connect(self.DB_NAME)
+            conn = sqlite3.connect(f'data/{self.DB_NAME}')
             return conn
         except sqlite3.Error as e:
             self._show_error_box("Ошибка базы данных",
@@ -252,6 +239,7 @@ class CoffeeApp(QMainWindow):
             self.statusBar().showMessage(f"Загружено {len(rows)} записей.", 3000)
 
         except sqlite3.Error as e:
+            print()
             self._show_error_box("Ошибка SQL",
                                  f"Не удалось выполнить запрос к базе данных.\nОшибка: {e}")
         finally:
